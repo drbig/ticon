@@ -87,7 +87,7 @@ static void handle_icon(GtkWidget *widget, GdkEvent *event, gpointer data) {
 }
 
 // menu item click handler
-void handle_menu(gpointer data) {
+static void handle_menu(gpointer data) {
   dbg(printf("DEBUG: handle menu, data = %d\n", GPOINTER_TO_INT(data)));
   lua_rawgeti(L, LUA_REGISTRYINDEX, keys[GPOINTER_TO_INT(data)]);
   lua_pcall(L, 0, 0, 0);
