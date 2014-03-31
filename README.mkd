@@ -1,0 +1,54 @@
+# Lua-configurable GTK2 tray icon
+
+A very simple (and not thoroughly tested) GTK2 tray icon application where you can configure the pop-up menu with [Lua](http://www.lua.org/). In fact every menu item action must be a Lua function. You can also choose a different icon (either one of the stock GTK icons, or provide a path to a suitable image file) and the tooltip text.
+
+### First steps
+
+```bash
+$ git clone https://github.com/drbig/ticon.git
+$ make debug
+$ $EDITOR config.lua
+```
+
+### Example config
+
+```lua
+os = require("os")
+
+icon = {
+  kind = "stock",
+  path = "gtk-home",
+  title = "My Lua Tray Icon",
+}
+
+menu = {
+  {"XTerm", function ()
+    now = os.date("*t")
+    if (now.hour > 6) and (now.hour < 22) then
+      print("day xterm")
+      os.execute("xterm +rv &")
+    else
+      print("night xterm")
+      os.execute("xterm -rv &")
+    end
+  end},
+  {"One", function ()
+    print("one")
+  end},
+  {"Two", function ()
+    print("two")
+  end},
+  {"Three", function ()
+    print("three")
+  end},
+  {"This is a test", function ()
+    print("test")
+  end},
+}
+```
+
+Only `menu` table is required. If `icon` table is incomplete the default values will be used (as `#DEFINE`ed in the source). You can set `kind` to either "stock" or "file", and then set `path` to appropriate value. Also if you're executing commands remember they should be started in the background - otherwise your Lua function will wait for the exit status.
+
+### Disclaimer
+
+This software comes with *absolutely no warranty*, if you need legalese assume [BSD 2-clause license](http://opensource.org/licenses/BSD-2-Clause).
