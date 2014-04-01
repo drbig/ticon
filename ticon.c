@@ -203,7 +203,10 @@ int main(int argc, char *argv[]) {
                 }
 
                 lua_pop(L, 1);
-                idx++;
+                if (++idx == MAX_ITEMS) {
+                  dbg(printf("WARN: Max items reached\n"));
+                  break;
+                }
               }
             }
           }
