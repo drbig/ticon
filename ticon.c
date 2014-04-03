@@ -19,7 +19,6 @@
 
 // Configurable defines
 
-#define MAX_ITEMS     64              // maximum number of menu items
 #define ICON_KIND     "s"             // "s" for stock, "f" for file
 #define ICON_PATH     "gtk-stop"      // GTK_STOCK string, or path to file
 #define ICON_TOOLTIP  "Lua Tray Icon" // default tool-tip
@@ -53,7 +52,6 @@
 
 static GtkWidget *menu, *item;
 static GtkStatusIcon *icon;
-static int keys[MAX_ITEMS];
 
 // Public variables
 
@@ -78,7 +76,8 @@ static void handle_icon(GtkWidget *widget, GdkEvent *event, gpointer data) {
 
   switch (evt->button) {
     case 1:
-      gtk_menu_popup(GTK_MENU(menu), NULL, NULL, gtk_status_icon_position_menu, icon, evt->button, evt->time);
+      gtk_menu_popup(GTK_MENU(menu), NULL, NULL, gtk_status_icon_position_menu, \
+          icon, evt->button, evt->time);
       break;
     case 3:
       gtk_main_quit();
@@ -89,7 +88,7 @@ static void handle_icon(GtkWidget *widget, GdkEvent *event, gpointer data) {
 // menu item click handler
 static void handle_menu(gpointer data) {
   dbg(printf("DEBUG: handle menu, data = %d\n", GPOINTER_TO_INT(data)));
-  lua_rawgeti(L, LUA_REGISTRYINDEX, keys[GPOINTER_TO_INT(data)]);
+  lua_rawgeti(L, LUA_REGISTRYINDEX, GPOINTER_TO_INT(data));
   lua_pcall(L, 0, 0, 0);
 }
 
@@ -97,7 +96,6 @@ static void handle_menu(gpointer data) {
 
 int main(int argc, char *argv[]) {
   const char *strings[3];
-  gint idx;
 
   if (argc != 2) {
     fprintf(stderr, "Usage: %s script.lua\n", argv[0]);
@@ -170,43 +168,37 @@ int main(int argc, char *argv[]) {
     die("No menu defined");
   else {
     lua_pushnil(L);
-    idx = 0;
     while (lua_next(L, -2)) {
       if (!lua_isnumber(L, -2) || !lua_istable(L, -1)) {
-        dbg(printf("WARN: Wrong menu format at element %d", idx+1));
+        dbg(printf("WARN: Wrong menu format at element (1)"));
         lua_pop(L, 1);
       } else {
         lua_pushnil(L);
         if (lua_next(L, -2)) {
           if (!lua_isnumber(L, -2) || !lua_isstring(L, -1)) {
-            dbg(printf("WARN: Wrong menu format at element %d,0", idx+1));
+            dbg(printf("WARN: Wrong menu format at element (2)"));
             lua_pop(L, 3);
           } else {
             strings[0] = lua_tostring(L, -1);
             item = gtk_menu_item_new_with_label(strings[0]);
             gtk_widget_show(GTK_WIDGET(item));
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-            g_signal_connect_swapped(item, "activate", G_CALLBACK(handle_menu), GINT_TO_POINTER(idx));
             lua_pop(L, 1);
 
             if (lua_next(L, -2)) {
               if (!lua_isnumber(L, -2) || !lua_isfunction(L, -1)) {
-                dbg(printf("WARN: Wrong menu format at element %d,1", idx+1));
+                dbg(printf("WARN: Wrong menu format at element (3)"));
                 lua_pop(L, 1);
               } else {
-                keys[idx] = luaL_ref(L, LUA_REGISTRYINDEX);
-                dbg(printf("DEBUG: key[%d] = %d\n", idx, keys[idx]));
+                g_signal_connect_swapped(item, "activate", G_CALLBACK(handle_menu), \
+                    GINT_TO_POINTER(luaL_ref(L, LUA_REGISTRYINDEX)));
 
                 if (lua_next(L, -2)) {
-                  dbg(printf("WARN: Ignoring rest at element %d\n", idx));
+                  dbg(printf("WARN: Ignoring rest at element\n"));
                   lua_pop(L, 2);
                 }
 
                 lua_pop(L, 1);
-                if (++idx == MAX_ITEMS) {
-                  dbg(printf("WARN: Max items reached\n"));
-                  break;
-                }
               }
             }
           }
