@@ -92,6 +92,25 @@ static void handle_menu(gpointer data) {
   lua_pcall(L, 0, 0, 0);
 }
 
+// implementation of alert primitive.
+int alert_box(lua_State * L) {
+
+    const char *str = luaL_checkstring(L, 1);
+
+    if ( str == NULL )
+        return 0;
+
+    GtkWidget*dialog = gtk_message_dialog_new (NULL,
+                                               GTK_DIALOG_DESTROY_WITH_PARENT,
+                                               GTK_MESSAGE_INFO,
+                                               GTK_BUTTONS_CLOSE,
+                                               str );
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
+    return 0;
+}
+
+
 // Main routine
 
 int main(int argc, char *argv[]) {
@@ -109,6 +128,10 @@ int main(int argc, char *argv[]) {
   L = luaL_newstate();
   luaL_openlibs(L);
   luaL_dofile(L, argv[1]);
+
+  // enable our alert() primitive
+  lua_pushcfunction(L, alert_box);
+  lua_setglobal(L, "alert" );
 
   // get tray icon config
   LUA_CHKGLOBAL("icon", table) {
