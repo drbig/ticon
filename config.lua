@@ -18,16 +18,19 @@ menu = {
     end
   end},
   {"One", function ()
-    print("one")
+    alert("one")
   end},
   {"Two", function ()
-    print("two")
+    alert("two")
   end},
   {"Three", function ()
-    print("three")
+    alert("three")
   end},
   {"This is a test", function ()
-    print("test")
+    alert("test")
+  end},
+  {"Quit", function ()
+    os.exit(0);
   end},
 }
 
